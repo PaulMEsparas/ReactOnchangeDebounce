@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import CardList from "./components/card-list.js/card-list.component";
 import SearchBox from "./components/search-box.js/search-box.component";
 import "./App.css";
+import useDebounce from "./components/debounce";
 
 const App = () => {
   const [searchField, setSearchField] = useState("");
   const [monsters, setMonsters] = useState([]);
   const [filteredMonsters, setFilteredMonsters] = useState(monsters);
+  const debounceSearchTerm = useDebounce(searchField);
 
   useEffect(() => {
     fetch("https://jsonplaceholder.typicode.com/users")
@@ -16,12 +18,15 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const newFilteredMonsters = monsters.filter((monster) =>
-      monster.name.toLowerCase().includes(searchField)
-    );
-
-    setFilteredMonsters(newFilteredMonsters);
-  }, [monsters, searchField]);
+    if (debounceSearchTerm) {
+      const newFilteredMonsters = monsters.filter((monster) =>
+        monster.name.toLowerCase().includes(debounceSearchTerm)
+      );
+      setFilteredMonsters(newFilteredMonsters);
+    } else {
+      setFilteredMonsters(monsters);
+    }
+  }, [debounceSearchTerm, monsters]);
 
   const handleOnchange = (e) => {
     const searchFieldString = e.target.value.toLowerCase();
